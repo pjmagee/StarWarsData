@@ -1,0 +1,380 @@
+{
+  "type": "object",
+  "description": "A schema for a planet in the Star Wars universe",
+  "title": "Planet",
+  "properties": {
+    "name": {
+      "description": "The name of the planet",
+      "type": "string"
+    },
+    "summary": {
+      "description": "A short description of the planet",
+      "type": "string"
+    },
+    "region": {
+      "description": "The galactic region where the planet is located",
+      "type": "string",
+      "enum": [
+        "Deep Core",
+        "Core Worlds",
+        "Colonies",
+        "Inner Rim Territories",
+        "Expansion Region",
+        "Mid Rim Territories",
+        "Outer Rim Territories",
+        "Unknown Regions",
+        "Tingel Arm",
+        "Wild Space",
+        "Western Reaches"
+      ]
+    },
+    "sector": {
+      "description": "The galactic sector where the planet is located",
+      "type": "string"
+    },
+    "system": {
+      "description": "The star system where the planet is located",
+      "type": "string"
+    },
+    "stars": {
+      "description": "The stars the planet orbits",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "position": {
+      "description": "The orbital position of the planet within the system",
+      "type": "integer"
+    },
+    "moons": {
+      "description": "The moons of the planet",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "grid": {
+      "description": "The grid square of the planet using the standard galactic grid",
+      "pattern": "^[A-Z][0-9]+$",
+      "type": "string"
+    },
+    "xyz": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "X coordinate"
+        },
+        "y": {
+          "type": "number",
+          "description": "Y coordinate"
+        },
+        "z": {
+          "type": "number",
+          "description": "Z coordinate"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "description": "XYZ coordinates of the planet"
+    },
+    "routes": {
+      "description": "The trade routes that pass through the planet",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "day": {
+      "description": "The length of the day on the planet",
+      "type": "object",
+      "properties": {
+        "length": {
+          "description": "The length of the day on the planet",
+          "type": "integer"
+        },
+        "description": {
+          "description": "The unit of time used to measure the length of the day",
+          "type": "string",
+          "enum": [
+            "Standard Hours",
+            "Standard Days",
+            "Local Hours",
+            "Local Days",
+            "Galactic Standard Time"
+          ]
+        }
+      }
+    },
+    "year": {
+      "description": "The length of the year on the planet",
+      "type": "object",
+      "properties": {
+        "length": {
+          "description": "The length of the year on the planet",
+          "type": "integer"
+        },
+        "description": {
+          "description": "The unit of time used to measure the length of the year",
+          "type": "string",
+          "enum": [
+            "Standard Days",
+            "Standard Years",
+            "Local Days",
+            "Local Years",
+            "Galactic Standard Time"
+          ]
+        }
+      }
+    },
+    "class": {
+      "type": "string",
+      "enum": [
+        "Terrestrial",
+        "Desert",
+        "Ice",
+        "Forest",
+        "Ocean",
+        "Volcanic",
+        "Swamp",
+        "City",
+        "Gas Giant",
+        "Barren",
+        "Tundra",
+        "Tropical",
+        "Savannah",
+        "Cratered"
+      ],
+      "description": "The class of the planet"
+    },
+    "diameter": {
+      "description": "The diameter of the planet in kilometers",
+      "type": "integer"
+    },
+    "events": {
+      "description": "Important events that took place on the planet",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "atmosphere": {
+      "description": "The atmosphere of the planet",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "The type of atmosphere on the planet",
+          "type": "string",
+          "enum": [
+            "Type I",
+            "Type II",
+            "Type III",
+            "Type IV"
+          ]
+        },
+        "description": {
+          "description": "The description of the atmosphere",
+          "type": "string",
+          "enum": [
+            "Breathable",
+            "Breath mask recommended",
+            "Breath mask required",
+            "Environmental suit required"
+          ]
+        }
+      }
+    },
+    "climate": {
+      "description": "The climate of the planet",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "gravity": {
+      "description": "The gravity of the planet using the standard gravity unit",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "terrain": {
+      "description": "The terrain of the planet",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "water": {
+      "description": "The surface water percentage of the planet",
+      "type": "string"
+    },
+    "interest": {
+      "description": "Points of interest on the planet",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "flora": {
+      "description": "The flora that inhabit the planet",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "fauna": {
+      "description": "The fauna that inhabit the planet",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "species": {
+      "description": "The species that inhabit the planet",
+      "type": "object",
+      "properties": {
+        "native": {
+          "description": "The native species that inhabit the planet",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "other": {
+          "description": "Other species that inhabit the planet",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "cultures": {
+      "description": "The Socio-cultural group(s) that inhabit the planet",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "languages": {
+      "description": "The language(s) spoken on the planet",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "governments": {
+      "description": "The government(s) of the planet",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "A political or governing body that rules/ruled the planet",
+        "properties": {
+          "type": {
+            "description": "The type of government on the planet",
+            "type": "string",
+            "enum": [
+              "Democracy",
+              "Oligarchy",
+              "Autocracy",
+              "Theocracy",
+              "Feudalism",
+              "Tribal Governance",
+              "Corporate Governance",
+              "Military Dictatorship",
+              "Anarchy",
+              "Communalism",
+              "Technocracy",
+              "Plutocracy"
+            ]
+          },
+          "description": {
+            "description": "A description of the government",
+            "type": "string"
+          },
+          "leader": {
+            "description": "The leader of the government",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the government / governing body",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "population": {
+      "description": "The population of the planet",
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "description": "The total estimated population of the planet"
+        },
+        "breakdown": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "species": {
+                "description": "The species that make up this slice of the population",
+                "type": "string"
+              },
+              "population": {
+                "type": "integer",
+                "description": "The percentage of the population that is of the species"
+              }
+            }
+          }
+        }
+      }
+    },
+    "demonym": {
+      "description": "The demonym of the inhabitants of the planet",
+      "type": "string"
+    },
+    "cities": {
+      "description": "The major cities on the planet",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "imports": {
+      "description": "The major resources or goods that the planet imports",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "exports": {
+      "description": "The major resources or goods that the planet exports",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "affiliations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "continuity": {
+      "description": "The classification of the planet in the Star Wars lore",
+      "type": "string",
+      "enum": [
+        "Canon",
+        "Legends",
+        "Canon/Legends"
+      ]
+    }
+  },
+  "required": [
+    "name",
+    "continuity"
+  ]
+}
