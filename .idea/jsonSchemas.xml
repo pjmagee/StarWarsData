@@ -15,6 +15,9 @@
                   <Item>
                     <option name="path" value="src/json_schemas/planet_schema.json" />
                   </Item>
+                  <Item>
+                    <option name="path" value="src/json_schemas/planet.json" />
+                  </Item>
                 </list>
               </option>
             </SchemaInfo>

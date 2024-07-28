@@ -1,85 +1,48 @@
 import json
-
+import os
 import openai
 
-openai.api_key = 'sk-proj-XuQ7eeJ9hu3kv8lcoph0T3BlbkFJmmTeDhvkvJX0tdR7N4wo'
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-def create_function_fill_planet_schema() -> dict[str, any]:
+def load_json_schema(file_path: str) -> (bool, dict[str, any] | None):
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"Schema file not found: {file_path}")
+
+    try:
+        with open(file_path, 'r') as file:
+            schema = json.load(file)
+        return True, schema
+    except json.JSONDecodeError as e:
+        return False, None
+
+
+def get_function_schema(name, description, json_schema) -> dict[str, dict[str, any] | str]:
     return {
         "type": "function",
         "function": {
-            "name": "fill_planet_schema",
-            "description": "Fill in the planet schema based on the provided text from the user",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "name": {"type": "string"},
-                    "region": {"type": "string"},
-                    "sector": {"type": "string"},
-                    "system": {"type": "string"},
-                    "stars": {"type": "array", "items": {"type": "string"}},
-                    "position": {"type": "string"},
-                    "moons": {"type": "array", "items": {"type": "string"}},
-                    "coord": {
-                        "$comment": "The coordinates of the planet (Galactic Standard)",
-                        "type": "string"
-                    },
-                    "xyz": {"type": "string"},
-                    "routes": {"type": "array", "items": {"type": "string"}},
-                    "distance": {"type": "string"},
-                    "lengthday": {"type": "string"},
-                    "lengthyear": {"type": "string"},
-                    "class": {"type": "string"},
-                    "diameter": {"type": "string"},
-                    "atmosphere": {
-                        "$comment": "The atmosphere of the planet",
-                        "type": "array", "items": {"type": "string"}
-                    },
-                    "climate": {"type": "array", "items": {"type": "string"}},
-                    "gravity": {"type": "string"},
-                    "terrain": {"type": "array", "items": {"type": "string"}},
-                    "water": {"type": "string"},
-                    "interest": {"type": "string"},
-                    "flora": {"type": "array", "items": {"type": "string"}},
-                    "fauna": {"type": "array", "items": {"type": "string"}},
-                    "otherlife": {"type": "array", "items": {"type": "string"}},
-                    "species": {"type": "array", "items": {"type": "string"}},
-                    "otherspecies": {"type": "array", "items": {"type": "string"}},
-                    "socialgroup": {"type": "string"},
-                    "languages": {"type": "array", "items": {"type": "string"}},
-                    "government": {"type": "string"},
-                    "population": {"type": "number"},
-                    "demonym": {"type": "string"},
-                    "cities": {"type": "array", "items": {"type": "string"}},
-                    "imports": {"type": "array", "items": {"type": "string"}},
-                    "exports": {"type": "array", "items": {"type": "string"}},
-                    "affiliations": {"type": "array", "items": {"type": "string"}},
-                    "isCanon": {"type": "boolean"}
-                },
-                "required": ["name"]
-            }
+            "name": name,
+            "description": description,
+            "parameters": json_schema,
         }
     }
 
 
-def call_openai_function(content, function_definition):
+def call_openai_function(content: any, function_definition: dict[str, any]):
     """
     Call the OpenAI API to fill in the planet schema based on the provided text
     """
-    
-
     response = openai.chat.completions.create(
         messages=[
             {
                 "role": "system",
                 "content": """
-                    You are an assistant that fills in the Planet Schema
+                    You are an assistant helping a user fill in the schema based on the provided text.
                 """
             },
             {
                 "role": "user",
-                "content": json.dumps(content)
+                "content": json.dumps(obj=content, indent=None)
             }
         ],
         model="gpt-4o",

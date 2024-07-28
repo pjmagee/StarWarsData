@@ -1,21 +1,68 @@
 import json
 import logging
+import os
+import re
+import ai
+import time
 from typing import Union, Dict, Any, List
 from urllib.parse import urlencode
-
-import openai
+from transformers import pipeline, Pipeline
 import requests
 from bs4 import BeautifulSoup
 
 JSON = Union[Dict[str, Any], List[Any], str, int, float, bool, None]
 
 
-openai.api_key = 'sk-proj-XuQ7eeJ9hu3kv8lcoph0T3BlbkFJmmTeDhvkvJX0tdR7N4wo'
+class PageProperties:
+    title: str
+    sections: list[dict] = []
+    infoboxes: list[dict] = []
+
+    def __init__(self, title: str, sections: list[dict], infoboxes: list[dict]):
+        self.title = title
+        self.sections = sections
+        self.infoboxes = infoboxes
+
+    def to_dict(self):
+        return {
+            "title": self.title,
+            "sections": self.sections,
+            "infoboxes": self.infoboxes
+        }
+
+
+class Output:
+    title: str
+    page_id: int
+    sections: dict[str, str]
+    categories: set[str]
+    infobox: JSON
+    completion: JSON | None
+
+    def __init__(self):
+        self.title = ""
+        self.page_id = 0
+        self.sections = {}
+        self.categories = set()
+        self.infobox = {}
+        self.completion = None
+
+    def to_dict(self):
+        return {
+            "title": self.title,
+            "id": self.page_id,
+            "sections": self.sections,
+            "categories": list(self.categories),
+            "infobox": self.infobox,
+            "completion": self.completion
+        }
+
+
+url = "https://starwars.fandom.com/api.php"
+
 trim_values: str = "\"',.:-"
 trim_contents: str = "\"',."
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-url = "https://starwars.fandom.com/api.php"
+value_elems = ["sup", "br", "li"]
 
 ignore_sections = [
     "Appearances",
@@ -27,6 +74,20 @@ ignore_sections = [
     "Real-world similarities",
     "Non-canon sources"
 ]
+
+
+def get_safe_file_name(template: str, page_id: int, title: str) -> str:
+    """
+    Get a safe file name for the given page id and title
+    :param template: the infobox template name
+    :param page_id: the page id
+    :param title: the title of the page
+    :return: a safe file name
+    """
+    template = re.sub(r'[^\w\s-]', '_', template)
+    safe_title = re.sub(r'[^\w\s-]', '_', title)
+    safe_title = safe_title.replace(' ', '_')
+    return f"{page_id}_{template}_{safe_title}.json"
 
 
 def process_pages_with_infoboxes():
@@ -42,6 +103,8 @@ def process_pages_with_infoboxes():
     full_url = f"{url}?{urlencode(params)}"
     logging.info(f"Making request to {full_url}")
 
+    os.makedirs("output", exist_ok=True)
+
     while should_continue:
         response = requests.get(url, params=params)
         data = response.json()
@@ -52,23 +115,67 @@ def process_pages_with_infoboxes():
 
         for item in data['query']['pageswithprop']:
             title = str(item['title'])
-            pageid = int(item['pageid'])
+            page_id = int(item['pageid'])
             page_properties = get_page_props(title)
 
             o = Output()
             o.title = title
-            o.id = pageid
-            o.categories.extend(get_page_categories(title))
+            o.page_id = page_id
+
+            for category in get_page_categories(title):
+                o.categories.add(category)
+
+            o.infobox = page_properties.infoboxes[0]
 
             for page_section in page_properties.sections:
                 section_html = get_section_content(title, page_section['index'])
-                section_text = text_cleanup(section_html)
+                section_text = cleanup_section_html(section_html)
+                # summarizer = pipeline(task="summarization", model="facebook/bart-large-cnn")
+                # chunks = tokenize_content(section_text, summarizer.tokenizer)
+                # summary = summarize_chunks(chunks, summarizer.tokenizer, summarizer.model)
+                # o.sections[page_section['line']] = summary
                 o.sections[page_section['line']] = section_text
 
-            for infobox in page_properties.infoboxes:
-                o.infoboxes.append(infobox)
+            write_to_file(o)
+            time.sleep(1)
 
-            logging.info(json.dumps(o.to_dict(), indent=2, ensure_ascii=False))
+
+def tokenize_content(content, tokenizer, max_length=1024):
+    tokens = tokenizer(content,
+                       return_tensors="pt",
+                       truncation=True,
+                       padding='longest',
+                       max_length=max_length)
+    input_ids = tokens.input_ids[0]
+    chunks = [input_ids[i:i + max_length] for i in range(0, len(input_ids), max_length)]
+    return chunks
+
+
+def summarize_chunks(chunks, tokenizer, model):
+    summaries = []
+    for chunk in chunks:
+        inputs = {"input_ids": chunk.unsqueeze(0)}
+        summary_ids = model.generate(
+            **inputs,
+            max_length=100,
+            min_length=20,
+            length_penalty=1.5,
+            num_beams=2,
+            early_stopping=True)
+        summaries.append(tokenizer.decode(summary_ids[0], skip_special_tokens=True))
+    return ' '.join(summaries)
+
+
+def write_to_file(o: Output):
+    template_name = o.infobox['template']
+    file_name = get_safe_file_name(template_name, o.page_id, o.title)
+    file_path = os.path.join("output", template_name, file_name)
+
+    directory = os.path.dirname(file_path)
+    os.makedirs(directory, exist_ok=True)
+
+    with open(file_path, 'w') as file:
+        json.dump(o.to_dict(), file, indent=4)
 
 
 def get_category_members(name: str = "Planets", limit: int = 10):
@@ -87,23 +194,6 @@ def get_category_members(name: str = "Planets", limit: int = 10):
     data = response.json()
     return data['query']['categorymembers']
 
-
-class PageProperties:
-    title: str
-    sections: list[str] = []
-    infoboxes: list[dict] = []
-
-    def __init__(self, title: str, sections: list[str], infoboxes: list[dict]):
-        self.title = title
-        self.sections = sections
-        self.infoboxes = infoboxes
-
-    def to_dict(self):
-        return {
-            "title": self.title,
-            "sections": self.sections,
-            "infoboxes": self.infoboxes
-        }
 
 def get_page_props(title: str) -> PageProperties:
     params = {
@@ -180,130 +270,34 @@ def get_page_categories(title: str) -> list[str]:
     return categories
 
 
-def create_function_fill_planet_schema():
-    return {
-        "type": "function",
-        "function": {
-            "name": "fill_planet_schema",
-            "description": "Fill in the planet schema based on the provided text from the user",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "name": {"type": "string"},
-                    "region": {"type": "string"},
-                    "sector": {"type": "string"},
-                    "system": {"type": "string"},
-                    "stars": {"type": "array", "items": {"type": "string"}},
-                    "position": {"type": "string"},
-                    "moons": {"type": "array", "items": {"type": "string"}},
-                    "coord": {
-                        "$comment": "The coordinates of the planet (Galactic Standard)",
-                        "type": "string"
-                    },
-                    "xyz": {"type": "string"},
-                    "routes": {"type": "array", "items": {"type": "string"}},
-                    "distance": {"type": "string"},
-                    "lengthday": {"type": "string"},
-                    "lengthyear": {"type": "string"},
-                    "class": {"type": "string"},
-                    "diameter": {"type": "string"},
-                    "atmosphere": {
-                        "$comment": "The atmosphere of the planet",
-                        "type": "array", "items": {"type": "string"}
-                    },
-                    "climate": {"type": "array", "items": {"type": "string"}},
-                    "gravity": {"type": "string"},
-                    "terrain": {"type": "array", "items": {"type": "string"}},
-                    "water": {"type": "string"},
-                    "interest": {"type": "string"},
-                    "flora": {"type": "array", "items": {"type": "string"}},
-                    "fauna": {"type": "array", "items": {"type": "string"}},
-                    "otherlife": {"type": "array", "items": {"type": "string"}},
-                    "species": {"type": "array", "items": {"type": "string"}},
-                    "otherspecies": {"type": "array", "items": {"type": "string"}},
-                    "socialgroup": {"type": "string"},
-                    "languages": {"type": "array", "items": {"type": "string"}},
-                    "government": {"type": "string"},
-                    "population": {"type": "number"},
-                    "demonym": {"type": "string"},
-                    "cities": {"type": "array", "items": {"type": "string"}},
-                    "imports": {"type": "array", "items": {"type": "string"}},
-                    "exports": {"type": "array", "items": {"type": "string"}},
-                    "affiliations": {"type": "array", "items": {"type": "string"}},
-                    "isCanon": {"type": "boolean"}
-                },
-                "required": ["name"]
-            }
-        }
-    }
-
-
-def call_openai_function(content, function_definition):
-    """
-    Call the OpenAI API to fill in the planet schema based on the provided text
-    """
-
-    response = openai.chat.completions.create(
-        messages=[
-            {
-                "role": "system",
-                "content": """
-                    You are an assistant that fills in the Planet Schema
-                """
-            },
-            {
-                "role": "user",
-                "content": json.dumps(content)
-            }
-        ],
-        model="gpt-4o",
-        tools=[function_definition],
-        tool_choice="auto"
-    )
-    arguments = response.choices[0].message.tool_calls[0].function.arguments
-    return json.loads(arguments)
-
-
-class Output:
-    title: str
-    id: int
-    sections: dict[str, str] = {}
-    categories: list[str] = []
-    infoboxes: list[JSON] = []
-
-    def to_dict(self):
-        return {
-            "title": self.title,
-            "id": self.id,
-            "sections": self.sections,
-            "categories": self.categories,
-            "infoboxes": self.infoboxes
-        }
-
-
-def text_cleanup(html: str):
+def cleanup_section_html(html: str):
     soup = BeautifulSoup(html, "html.parser")
-    for footnote in soup.find_all("sup"):
-        footnote.decompose()
-    for stub in soup.find_all(attrs={"class": "stub"}):
-        stub.decompose()
     text = soup.get_text(strip=True, separator=" ")
-    return text
+    return " ".join(text.split())
 
-value_elems = ["sup", "br", "li"]
 
 def parse_infobox(json_string: str) -> JSON:
+
     infobox_data = json.loads(json_string)
-    parsed_data = {}
+
+    parsed_data = {
+        "template": None,
+        "infobox": {},
+    }
 
     for item in infobox_data[0]['data']:
         if item['type'] == 'image':
-            parsed_data['image'] = item['data'][0]['url']
+            parsed_data['infobox']['image'] = item['data'][0]['url']
+        elif item['type'] == 'navigation':
+            navigation = BeautifulSoup(item['data']['value'], "html.parser")
+            anchor = navigation.find("a")
+            parsed_data['template'] = anchor['href'].split(":")[-1]
         elif item['type'] == 'title':
-            parsed_data['title'] = item['data']['value']
+            parsed_data['infobox']['title'] = item['data']['value']
         elif item['type'] == 'group':
             group_name = item['data']['value'][0]['data']['value']
-            parsed_data[group_name] = {}
+            parsed_data['infobox'][group_name] = {}
+
             for group_item in item['data']['value']:
                 if group_item['type'] == 'data':
 
@@ -339,35 +333,8 @@ def parse_infobox(json_string: str) -> JSON:
                              .replace("\\", "")
                              .strip(trim_contents))
 
-                    parsed_data[group_name][label] = {
+                    parsed_data['infobox'][group_name][label] = {
                         "value": value,
                         "links": links
                     }
     return parsed_data
-
-
-def main():
-    pages = get_category_members(name="Planets", limit=500)
-    for page in pages:
-
-        title = page['title']
-        page_properties = get_page_props(title)
-
-        o = Output()
-        o.title = title
-        o.categories = get_page_categories(title)
-
-        for page_section in page_properties.sections:
-            section_html = get_section_content(page['title'], page_section['index'])
-            section_text = text_cleanup(section_html)
-            o.sections[page_section['line']] = section_text
-
-        for ib in page_properties.infoboxes:
-            o.infoboxes.append(ib)
-
-        logging.info(json.dumps(o.to_dict(), indent=2, ensure_ascii=False))
-
-
-if __name__ == "__main__":
-    # main()
-    print(process_pages_with_infoboxes())

@@ -1,7 +1,7 @@
 {
   "type": "object",
   "description": "A schema for a planet in the Star Wars universe",
-  "title": "Planet",
+  "title": "Star Wars Planet",
   "properties": {
     "name": {
       "description": "The name of the planet",

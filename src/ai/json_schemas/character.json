@@ -1,0 +1,198 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Star Wars Character",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "description": "The type or role of the character"
+    },
+    "image": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to an image of the character"
+    },
+    "name": {
+      "type": "string",
+      "description": "The name of the character"
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Other names or titles of the character"
+    },
+    "homeworld": {
+      "type": "string",
+      "description": "The homeworld of the character"
+    },
+    "birth": {
+      "type": "string",
+      "format": "string",
+      "$comment": "Star Wars Years are in BBY or ABY",
+      "pattern": "^[0-9]+ (BBY|ABY)$",
+      "description": "The birth date of the character"
+    },
+    "death": {
+      "type": "string",
+      "format": "string",
+      "$comment": "Star Wars Years are in BBY or ABY",
+      "pattern": "^[0-9]+ (BBY|ABY)$",
+      "description": "The death date of the character"
+    },
+    "species": {
+      "type": "string",
+      "description": "The species of the character"
+    },
+    "gender": {
+      "type": "string",
+      "description": "The gender of the character"
+    },
+    "pronouns": {
+      "type": "string",
+      "description": "The pronouns used by the character"
+    },
+    "height": {
+      "type": "number",
+      "description": "The height of the character in meters"
+    },
+    "mass": {
+      "type": "number",
+      "description": "The mass of the character in kilograms"
+    },
+    "hair": {
+      "type": "string",
+      "description": "The hair color or style of the character"
+    },
+    "feathers": {
+      "type": "string",
+      "description": "The feather color or style of the character"
+    },
+    "eyes": {
+      "type": "string",
+      "description": "The eye color of the character"
+    },
+    "skin": {
+      "type": "string",
+      "description": "The skin color or texture of the character"
+    },
+    "donors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The names of the genetic donors of the character"
+    },
+    "cybernetics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The cybernetic enhancements of the character"
+    },
+    "families": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Family names or family groups associated with the character"
+    },
+    "parents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The names of the character's parents"
+    },
+    "partners": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The names of the character's partners"
+    },
+    "siblings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The names of the character's siblings"
+    },
+    "children": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The names of the character's children"
+    },
+    "affiliations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the organization or group",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of organization or group",
+            "type": "string"
+          },
+          "primary": {
+            "description": "Is this the primary organization or group the character is associated with?",
+            "type": "boolean"
+          }
+        }
+      },
+      "description": "The organizations or groups the character is associated with"
+    },
+    "masters": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The names of the character's masters or mentors"
+    },
+    "apprentices": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The names of the character's apprentices"
+    },
+    "domains": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The domains or areas of expertise of the character"
+    },
+    "castes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The castes or social classes of the character"
+    },
+    "owners": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The names of the owners or proprietors of the character"
+    },
+    "continuity": {
+      "description": "The classification of the character in the Star Wars lore",
+      "type": "string",
+      "enum": [
+        "Canon",
+        "Legends",
+        "Canon/Legends"
+      ]
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
