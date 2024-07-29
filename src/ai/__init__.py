@@ -1,3 +1,1 @@
-from ai.ai import load_json_schema
-from ai.ai import get_function_schema
-from ai.ai import call_openai_function
+from ai.ai import load_json_schema, get_function_schema, call_openai_function

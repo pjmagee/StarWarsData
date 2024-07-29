@@ -1,4 +1,2 @@
-# summarizer = pipeline(task="summarization", model="facebook/bart-large-cnn")
-# chunks = tokenize_content(section_text, summarizer.tokenizer)
-# summary = summarize_chunks(chunks, summarizer.tokenizer, summarizer.model)
-# o.sections[page_section['line']] = summary
+from summarisation.raw_file_processor import RawFileProcessor
+from summarisation.text_summariser import TextSummariser
