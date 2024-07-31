@@ -3,22 +3,18 @@ import json
 import logging
 import os
 import re
-from typing import Union, Dict, Any, List
-from urllib.parse import urlencode
-
 import requests
+from urllib.parse import urlencode
 from bs4 import BeautifulSoup
-
 from wookiepedia import Output, PageProperties
-
-JSON = Union[Dict[str, Any], List[Any], str, int, float, bool, None]
+from wookiepedia.types import JSON
 
 
 class PageDownloader:
     """
     A class to download and process pages from the Star Wars Wookiepedia API
     """
-    
+
     url: str = "https://starwars.fandom.com/api.php"
     trim: str = "\"',.:-"
     value_elems = ["sup", "br", "li"]
@@ -52,14 +48,16 @@ class PageDownloader:
         page_id = int(page['pageid'])
 
         # Load additional data
-        page_properties = PageDownloader.get_page_props(title)
-        page_categories = PageDownloader.get_page_categories(title)
+        page_properties = self.get_page_props(title=title)
+        page_categories = self.get_page_categories(title=title)
         page_sections: dict[str, str] = {}
 
         for page_section in page_properties.sections:
-            html_section_content = PageDownloader.get_section_content(title, page_section['index'])
-            section_content = PageDownloader.cleanup_section_html()
-            page_sections[page_section['line']] = section_content
+            html_content = self.get_section_content(
+                page_title=title,
+                section_index=page_section['index'])
+            content = self.cleanup_section_html(html=html_content)
+            page_sections[page_section['line']] = content
 
         page_infobox = page_properties.infoboxes[0] if len(page_properties.infoboxes) == 1 else None
 
@@ -211,8 +209,7 @@ class PageDownloader:
         categories = [cat["*"] for cat in data["parse"]["categories"]]
         return categories
 
-    @staticmethod
-    def cleanup_section_html(html: str) -> str:
+    def cleanup_section_html(self, html: str) -> str:
         soup = BeautifulSoup(html, "html.parser")
         text = soup.get_text(strip=True, separator=" ")
         text = re.sub(r'\[\\]', '', text)

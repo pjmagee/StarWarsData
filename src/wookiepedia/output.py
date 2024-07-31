@@ -1,13 +1,13 @@
 from typing import Iterable
 
-from wookiepedia.page_downloader import JSON
+from wookiepedia.types import JSON
 
 
 class Output:
     """
     Represents the output of the Wookiepedia page parser.
     """
-    
+
     title: str
     page_id: int
     sections: dict[str, str]
